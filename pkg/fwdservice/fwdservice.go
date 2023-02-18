@@ -126,7 +126,17 @@ func (svcFwd *ServiceFWD) SyncPodForwards(force bool) {
 
 		defer func() { svcFwd.LastSyncedAt = time.Now() }()
 
-		k8sPods := svcFwd.GetPodsForService()
+		var k8sPods []v1.Pod;
+
+		for i := 1; i <= 3 || len(k8sPods) > 0; i++ {
+			k8sPods = svcFwd.GetPodsForService()
+			if len(k8sPods) > 0 {
+				break;
+			}
+
+			log.Debugf("No Running Pods returned for service %s, attempt %d", svcFwd, i)
+			time.Sleep(5 * time.Second)
+		}
 
 		// If no pods are found currently. Will try again next re-sync period.
 		if len(k8sPods) == 0 {
